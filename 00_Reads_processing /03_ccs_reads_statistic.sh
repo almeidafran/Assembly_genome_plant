@@ -7,7 +7,12 @@ conda activate yahs
 ##### simple statistics of FASTA/Q files #####
 seqkit stats -a -j 2 $filt_hifireads > ccs.filt.fastq.stats.txt
 
-##Nanoplot
+##Nanoplot: Although NanoPlot is specific to Nanopore data, it works well for checking HiFi read statistics.
+
+NanoPlot \
+  --fastq hifi_reads.fastq.gz \
+  -o nanoplot_hifi \
+  --threads 24
 
 ####Check the quality and size of the reads; if necessary, apply a size and quality filter using filtlong.####
 #https://github.com/rrwick/filtlong
