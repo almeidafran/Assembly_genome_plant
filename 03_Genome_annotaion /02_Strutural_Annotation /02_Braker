@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ###############################################################################
-# Script: run_braker3.sh
+# Script: run_braker.sh
 #
 # Description:
-# Structural gene annotation using BRAKER3 with RNA-seq and protein evidence.
+# Structural gene annotation using BRAKER with RNA-seq and protein evidence.
 #
 # Usage:
 #   bash run_braker3.sh \
@@ -21,7 +21,7 @@
 #       hisat2_alignment \
 #       Vellozia_tubiflora \
 #       Viridiplantae.fa \
-#       braker3_output \
+#       braker_output \
 #       32
 ###############################################################################
 
