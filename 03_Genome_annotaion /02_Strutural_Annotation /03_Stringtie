@@ -15,7 +15,7 @@ Uso:
     [--min-cov N] [--min-frac X] [--min-junc N] [--min-len N]
 
 Opcional:
-  -G  Anotação guia (ex.: braker.gtf).
+  -G  Anotação guia (ex.: braker.gtf or helixer.gtf).
   -e  Modo "estimate abundance only" do StringTie (usa apenas transcritos da anotação guia).
 USAGE
 }
