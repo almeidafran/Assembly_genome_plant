@@ -6,7 +6,7 @@ set -euo pipefail
 # Script: run_pasa_pipeline.sh
 #
 # Description:
-# Run PASA pipeline using transcript evidence and an existing gene annotation.
+# Run PASA pipeline using transcript evidence and an existing gene annotation to add the UTR region in the BRAKER annotation.
 #
 # Steps:
 # 1. Filter transcripts smaller than 100 nt using seqkit
@@ -18,8 +18,8 @@ set -euo pipefail
 # Usage:
 #   bash run_pasa_pipeline.sh \
 #     -g genome.softmasked.fasta \
-#     -t stringtie_transcripts.fa \ #relacionado com o gff da anotação
-#     -a braker.gff3 \ #or helixer.gff3, depende qual usou para rodar o strigtie
+#     -t stringtie_transcripts.fa \ #relacionado com o gff da anotação feita pelo Braker
+#     -a braker.gff3 \ 
 #     -p /path/to/PASApipeline.v2.5.3 \
 #     -c pasa_conf \
 #     -o pasa_results \
