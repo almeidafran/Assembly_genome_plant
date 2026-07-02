@@ -52,7 +52,7 @@ echo "Threads : $THREADS"
 echo "Output  : $OUTDIR"
 echo "========================================"
 
-annotep \
+EDTA-GUI/AnnoTEP/EDTA/EDTA.pl  \ #Modify path if necessary.
     --genome "$GENOME" \
     --species others \
     --step all \
@@ -63,6 +63,13 @@ annotep \
 
 echo ""
 echo "========================================"
-echo "AnnoTEP completed successfully!"
+echo "Generating AnnoTEP plots"
+echo "========================================"
+
+bash -u EDTA-GUI/AnnoTEP/Scripts/generate_PLOTs-for-TE-pipe.sh "$GENOME"  #Modify path if necessary.
+
+echo ""
+echo "========================================"
+echo "AnnoTEP analysis completed successfully!"
 echo "Results saved in: $OUTDIR"
 echo "========================================"
