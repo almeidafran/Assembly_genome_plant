@@ -1,1 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Uso:
+  run_stringtie_hapA.sh \
+    -b <dir_bams> \
+    -g <genoma.fasta> \
+    -o <outdir> \
+    -t <threads> \
+    -s <FR|RF|UNSTRANDED> \
+    [-G <guia.gff3|gtf>] \
+    [-e] \
+    [--min-cov N] [--min-frac X] [--min-junc N] [--min-len N]
+
+Opcional:
+  -G  Anotação guia (ex.: braker.gtf).
+  -e  Modo "estimate abundance only" do StringTie (usa apenas transcritos da anotação guia).
+USAGE
+}
+
+# defaults
+MIN_COVERAGE=2
+MIN_FRAC=0.1
+MIN_JUNC_COV=2
+MIN_LENGTH=200
+
+BAM_DIR=""
+GENOME_FA=""
+OUTDIR=""
+THREADS=""
+LIBTYPE=""
+GUIDE_GFF=""          # anotação guia (GTF/GFF3)
+USE_E_MODE=0          # se -e foi passado
+
+# long opts
+PARSED_ARGS=()
+while (( "$#" )); do
+  case "$1" in
+    --min-cov)   shift; MIN_COVERAGE="${1:-}";;
+    --min-frac)  shift; MIN_FRAC="${1:-}";;
+    --min-junc)  shift; MIN_JUNC_COV="${1:-}";;
+    --min-len)   shift; MIN_LENGTH="${1:-}";;
+    --help) usage; exit 0;;
+    -*)
+      PARSED_ARGS+=("$1" "${2:-}"); shift;;
+    *)
+      PARSED_ARGS+=("$1");;
+  esac
+  shift || true
+done
+set -- "${PARSED_ARGS[@]}"
+
+# short opts (inclui -G e -e)
+while getopts ":b:g:o:t:s:G:eh" opt; do
+  case "${opt}" in
+    b) BAM_DIR="${OPTARG}";;
+    g) GENOME_FA="${OPTARG}";;
+    o) OUTDIR="${OPTARG}";;
+    t) THREADS="${OPTARG}";;
+    s) LIBTYPE="${OPTARG}";;
+    G) GUIDE_GFF="${OPTARG}";;
 
