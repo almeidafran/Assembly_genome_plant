@@ -15,7 +15,7 @@
 #   bash run_rnaseq_qc_trim_hisat2.sh samples.tsv <hisat2_genome_index> <threads> <output_dir>
 #
 # Example:
-#   bash run_rnaseq_qc_trim_hisat2.sh samples.tsv genome_index/Vtub 16 rnaseq_results
+#   bash run_rnaseq_qc_trim_hisat2.sh samples.tsv genome_index.fa 16 rnaseq_results
 #
 # samples.tsv format:
 #   sample  tissue  R1  R2
@@ -87,6 +87,10 @@ tail -n +2 "$SAMPLES" | while read -r SAMPLE TISSUE R1 R2; do
         -o "$OUT_R1" \
         -O "$OUT_R2" \
         -w "$THREADS" \
+        --qualified_quality_phred 20 \
+        --n_base_limit 5 \
+        --length_required 40 \
+        --detect_adapter_for_pe \
         -h "$HTML" \
         -j "$JSON"
 
@@ -120,6 +124,7 @@ tail -n +2 "$SAMPLES" | while read -r SAMPLE TISSUE R1 R2; do
         -x "$GENOME_INDEX" \
         -1 "$TRIM_R1" \
         -2 "$TRIM_R2" \
+        --rna-strandness RF \ 
         -p "$THREADS" \
         2> "$LOG_FILE" | \
     samtools sort -@ 4 -o "$OUT_BAM"
