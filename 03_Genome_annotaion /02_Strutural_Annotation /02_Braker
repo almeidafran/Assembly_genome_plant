@@ -1,1 +1,59 @@
+#!/bin/bash
 
+###############################################################################
+# Script: run_braker3.sh
+#
+# Description:
+# Structural gene annotation using BRAKER3 with RNA-seq and protein evidence.
+#
+# Usage:
+#   bash run_braker3.sh \
+#       <genome.fa> \
+#       <bam_directory> \
+#       <species_name> \
+#       <protein_Orthodb.fa> \
+#       <working_directory> \
+#       <threads>
+#
+# Example:
+#   bash run_braker3.sh \
+#       genome.softmasked.fa \
+#       hisat2_alignment \
+#       Vellozia_tubiflora \
+#       Viridiplantae.fa \
+#       braker3_output \
+#       32
+###############################################################################
+
+set -euo pipefail
+
+if [ "$#" -ne 6 ]; then
+    echo "Usage:"
+    echo "bash run_braker3.sh <genome.fa> <bam_directory> <species_name> <protein_db.fa> <working_directory> <threads>"
+    exit 1
+fi
+
+GENOME=$1
+BAM_DIR=$2
+SPECIES=$3
+PROTEINS=$4
+WORKDIR=$5
+THREADS=$6
+
+BAM_FILES=$(find "$BAM_DIR" -name "*.sorted.bam" | sort | paste -sd "," -)
+
+braker.pl \
+    --genome="$GENOME" \
+    --bam="$BAM_FILES" \
+    --species="$SPECIES" \
+    --prot_seq="$PROTEINS" \
+    --workingdir="$WORKDIR" \
+    --threads="$THREADS" \
+    --gff3 \
+    --UTR=off \
+    --softmasking \
+    --overwrite \
+    --GENEMARK_PATH="$GENEMARK_PATH" \ #optional
+    --PROTHINT_PATH="$PROTHINT_PATH" \ #optional
+    --DIAMOND_PATH="$DIAMOND_PATH" \ #optional
+    --SAMTOOLS_PATH="$SAMTOOLS_PATH"
