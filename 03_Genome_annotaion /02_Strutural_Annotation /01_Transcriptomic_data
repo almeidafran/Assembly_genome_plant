@@ -124,7 +124,7 @@ tail -n +2 "$SAMPLES" | while read -r SAMPLE TISSUE R1 R2; do
         -x "$GENOME_INDEX" \
         -1 "$TRIM_R1" \
         -2 "$TRIM_R2" \
-        --rna-strandness RF \ 
+        --rna-strandness RF \ #check how its sequencing was performed.
         -p "$THREADS" \
         2> "$LOG_FILE" | \
     samtools sort -@ 4 -o "$OUT_BAM"
