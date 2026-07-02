@@ -1,1 +1,57 @@
+#!/bin/bash
 
+###############################################################################
+# Script: run_helixer.sh
+#
+# Description:
+# Structural gene annotation using Helixer.
+#
+# Usage:
+#   bash run_helixer.sh <genome.fasta> <lineage> <species> <output_dir>
+#
+# Example:
+#   bash run_helixer.sh genome.softmasked.fasta land_plant Arabidopsis helixer_results
+###############################################################################
+
+set -euo pipefail
+
+if [ "$#" -ne 4 ]; then
+    echo ""
+    echo "Usage:"
+    echo "  bash run_helixer.sh <genome.fasta> <lineage> <species> <output_dir>"
+    echo ""
+    echo "Lineages:"
+    echo "  land_plant"
+    echo "  fungi"
+    echo "  vertebrate"
+    echo "  invertebrate"
+    echo ""
+    exit 1
+fi
+
+GENOME=$1
+LINEAGE=$2
+SPECIES=$3
+OUTDIR=$4
+
+mkdir -p "$OUTDIR"
+
+echo "========================================"
+echo "Running Helixer"
+echo "Genome   : $GENOME"
+echo "Lineage  : $LINEAGE"
+echo "Species  : $SPECIES"
+echo "Output   : $OUTDIR"
+echo "========================================"
+
+Helixer.py \
+    --fasta-path "$GENOME" \
+    --lineage "$LINEAGE" \
+    --species "$SPECIES" \
+    --gff-output-path "$OUTDIR/${SPECIES}.gff3" \
+    --subsequence-length 21384
+
+echo ""
+echo "========================================"
+echo "Helixer finished successfully!"
+echo "========================================"
