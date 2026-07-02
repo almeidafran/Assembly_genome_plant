@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+###############################################################################
+# Script: run_pasa_pipeline.sh
+#
+# Description:
+# Run PASA pipeline using transcript evidence and an existing gene annotation.
+#
+# Steps:
+# 1. Filter transcripts smaller than 100 nt using seqkit
+# 2. Clean transcripts with seqclean
+# 3. Run PASA alignment assembly
+# 4. Load current gene annotation
+# 5. Run PASA annotation comparison
+#
+# Usage:
+#   bash run_pasa_pipeline.sh \
+#     -g genome.softmasked.fasta \
+#     -t stringtie_transcripts.fa \ #relacionado com o gff da anotação
+#     -a braker.gff3 \ #or helixer.gff3, depende qual usou para rodar o strigtie
+#     -p /path/to/PASApipeline.v2.5.3 \
+#     -c pasa_conf \
+#     -o pasa_results \
+#     -n species_pasa \
+#     -T 32
+###############################################################################
+
+usage() {
+    echo ""
+    echo "Usage:"
+    echo "  bash run_pasa_pipeline.sh \\"
+    echo "    -g <genome.softmasked.fasta> \\"
+    echo "    -t <transcripts.fasta> \\"
+    echo "    -a <annotation.gff3> \\"
+    echo "    -p <PASApipeline_directory> \\"
+    echo "    -c <pasa_config_directory> \\"
+    echo "    -o <output_directory> \\"
+    echo "    -n <species_or_project_name> \\"
+    echo "    -T <threads>"
+    echo ""
+    exit 1
+}
+
+GENOME=""
+TRANSCRIPTS=""
+ANNOTATION=""
+PASA_DIR=""
+CONFIG_DIR=""
+OUTDIR=""
+PROJECT_NAME=""
+THREADS=""
+
+while getopts ":g:t:a:p:c:o:n:T:h" opt; do
+    case "$opt" in
+        g) GENOME="$OPTARG" ;;
+        t) TRANSCRIPTS="$OPTARG" ;;
+        a) ANNOTATION="$OPTARG" ;;
+        p) PASA_DIR="$OPTARG" ;;
+        c) CONFIG_DIR="$OPTARG" ;;
+        o) OUTDIR="$OPTARG" ;;
+        n) PROJECT_NAME="$OPTARG" ;;
+        T) THREADS="$OPTARG" ;;
+        h) usage ;;
+        *) usage ;;
+    esac
+done
+
+if [[ -z "$GENOME" || -z "$TRANSCRIPTS" || -z "$ANNOTATION" || -z "$PASA_DIR" || -z "$CONFIG_DIR" || -z "$OUTDIR" || -z "$PROJECT_NAME" || -z "$THREADS" ]]; then
+    usage
+fi
+
+mkdir -p "$OUTDIR"
+mkdir -p "$OUTDIR/01_transcripts_filtered"
+mkdir -p "$OUTDIR/02_seqclean"
+mkdir -p "$OUTDIR/03_pasa_alignment"
+mkdir -p "$OUTDIR/04_pasa_annotation"
+
+FILTERED_TRANSCRIPTS="$OUTDIR/01_transcripts_filtered/${PROJECT_NAME}_transcripts_min100.fa"
+CLEAN_TRANSCRIPTS="$OUTDIR/02_seqclean/$(basename "$FILTERED_TRANSCRIPTS").clean"
+
+ALIGN_CONF="$CONFIG_DIR/pasa.alignAssembly.Template.txt"
+ANNOT_CONF="$CONFIG_DIR/pasa.annotationCompare.Template.txt"
+
+echo "========================================"
+echo "Running PASA pipeline"
+echo "Genome      : $GENOME"
+echo "Transcripts : $TRANSCRIPTS"
+echo "Annotation  : $ANNOTATION"
+echo "PASA dir    : $PASA_DIR"
+echo "Config dir  : $CONFIG_DIR"
+echo "Output dir  : $OUTDIR"
+echo "Threads     : $THREADS"
+echo "========================================"
+
+###############################################################################
+# 1. Remove transcripts smaller than 100 nt
+###############################################################################
+
+echo "Filtering transcripts smaller than 100 nt..."
+
+seqkit seq -m 100 "$TRANSCRIPTS" > "$FILTERED_TRANSCRIPTS"
+
+###############################################################################
+# 2. Clean transcripts with seqclean
+###############################################################################
+
+echo "Cleaning transcripts with seqclean..."
+
+cd "$OUTDIR/02_seqclean"
+
+seqclean "../01_transcripts_filtered/$(basename "$FILTERED_TRANSCRIPTS")"
+
+cd - > /dev/null
+
+###############################################################################
+# 3. PASA alignment assembly
+###############################################################################
+
+echo "Running PASA alignment assembly..."
+
+cd "$OUTDIR/03_pasa_alignment"
+
+"$PASA_DIR/Launch_PASA_pipeline.pl" \
+    -c "$ALIGN_CONF" \
+    -C \
+    -R \
+    -g "$GENOME" \
+    -t "$CLEAN_TRANSCRIPTS" \
+    -T \
+    -u "$FILTERED_TRANSCRIPTS" \
+    --ALIGNERS blat,gmap,minimap2 \
+    --CPU "$THREADS"
+
+cd - > /dev/null
+
+###############################################################################
+# 4. Load current gene annotation
+###############################################################################
+
+echo "Loading current gene annotation..."
+
+"$PASA_DIR/scripts/Load_Current_Gene_Annotations.dbi" \
+    -c "$ALIGN_CONF" \
+    -g "$GENOME" \
+    -P "$ANNOTATION"
+
+###############################################################################
+# 5. PASA annotation comparison
+###############################################################################
+
+echo "Running PASA annotation comparison..."
+
+cd "$OUTDIR/04_pasa_annotation"
+
+"$PASA_DIR/Launch_PASA_pipeline.pl" \
+    -c "$ANNOT_CONF" \
+    -A \
+    -g "$GENOME" \
+    -t "$CLEAN_TRANSCRIPTS" \
+    --CPU "$THREADS" \
+    --TRANSDECODER \
+    --ALT_SPLICE
+
+cd - > /dev/null
+
+echo ""
+echo "========================================"
+echo "PASA pipeline completed successfully!"
+echo "Results saved in: $OUTDIR"
+echo "========================================"
