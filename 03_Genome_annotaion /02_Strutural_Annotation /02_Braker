@@ -9,7 +9,7 @@
 # Usage:
 #   bash run_braker3.sh \
 #       <genome.fa> \
-#       <bam_directory> \
+#       <bam_directory> \ #resultedfrom  script  01_Transcriptomic_data
 #       <species_name> \
 #       <protein_Orthodb.fa> \
 #       <working_directory> \
