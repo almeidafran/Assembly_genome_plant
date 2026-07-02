@@ -1,0 +1,134 @@
+#!/bin/bash
+
+###############################################################################
+# Script: run_rnaseq_qc_trim_hisat2.sh
+#
+# Description:
+# RNA-seq workflow:
+# 1. Quality control of raw FASTQ files with FastQC and MultiQC
+# 2. Read trimming/filtering with fastp
+# 3. Quality control of trimmed FASTQ files with FastQC and MultiQC
+# 4. Alignment against a reference genome using HISAT2
+# 5. BAM sorting with samtools
+#
+# Usage:
+#   bash run_rnaseq_qc_trim_hisat2.sh samples.tsv <hisat2_genome_index> <threads> <output_dir>
+#
+# Example:
+#   bash run_rnaseq_qc_trim_hisat2.sh samples.tsv genome_index/Vtub 16 rnaseq_results
+#
+# samples.tsv format:
+#   sample  tissue  R1  R2
+#   leaf_1  leaf    leaf_1_R1.fastq.gz  leaf_1_R2.fastq.gz
+#   root_1  root    root_1_R1.fastq.gz  root_1_R2.fastq.gz
+#   flower_1 flower flower_1_R1.fastq.gz flower_1_R2.fastq.gz
+###############################################################################
+
+set -euo pipefail
+
+if [ "$#" -ne 4 ]; then
+    echo "Usage:"
+    echo "  bash $0 samples.tsv <hisat2_genome_index> <threads> <output_dir>"
+    exit 1
+fi
+
+SAMPLES=$1
+GENOME_INDEX=$2
+THREADS=$3
+OUTDIR=$4
+
+RAW_QC_DIR="${OUTDIR}/01_fastqc_raw"
+RAW_MULTIQC_DIR="${OUTDIR}/02_multiqc_raw"
+TRIM_DIR="${OUTDIR}/03_fastp_trimmed"
+TRIM_QC_DIR="${OUTDIR}/04_fastqc_trimmed"
+TRIM_MULTIQC_DIR="${OUTDIR}/05_multiqc_trimmed"
+ALIGN_DIR="${OUTDIR}/06_hisat2_alignment"
+LOG_DIR="${OUTDIR}/logs"
+
+mkdir -p "$RAW_QC_DIR" "$RAW_MULTIQC_DIR" "$TRIM_DIR" "$TRIM_QC_DIR" \
+         "$TRIM_MULTIQC_DIR" "$ALIGN_DIR" "$LOG_DIR"
+
+echo "========================================"
+echo "RNA-seq QC, trimming and HISAT2 pipeline"
+echo "Samples file : $SAMPLES"
+echo "Genome index : $GENOME_INDEX"
+echo "Threads      : $THREADS"
+echo "Output dir   : $OUTDIR"
+echo "========================================"
+
+###############################################################################
+# 1. FastQC on raw reads
+###############################################################################
+
+echo "Running FastQC on raw reads..."
+
+tail -n +2 "$SAMPLES" | while read -r SAMPLE TISSUE R1 R2; do
+    fastqc -t "$THREADS" -o "$RAW_QC_DIR" "$R1" "$R2"
+done
+
+multiqc "$RAW_QC_DIR" -o "$RAW_MULTIQC_DIR"
+
+###############################################################################
+# 2. Trimming with fastp
+###############################################################################
+
+echo "Running fastp..."
+
+tail -n +2 "$SAMPLES" | while read -r SAMPLE TISSUE R1 R2; do
+
+    OUT_R1="${TRIM_DIR}/${SAMPLE}_${TISSUE}_R1.trimmed.fastq.gz"
+    OUT_R2="${TRIM_DIR}/${SAMPLE}_${TISSUE}_R2.trimmed.fastq.gz"
+    HTML="${TRIM_DIR}/${SAMPLE}_${TISSUE}_fastp.html"
+    JSON="${TRIM_DIR}/${SAMPLE}_${TISSUE}_fastp.json"
+
+    fastp \
+        -i "$R1" \
+        -I "$R2" \
+        -o "$OUT_R1" \
+        -O "$OUT_R2" \
+        -w "$THREADS" \
+        -h "$HTML" \
+        -j "$JSON"
+
+done
+
+###############################################################################
+# 3. FastQC on trimmed reads
+###############################################################################
+
+echo "Running FastQC on trimmed reads..."
+
+fastqc -t "$THREADS" -o "$TRIM_QC_DIR" "${TRIM_DIR}"/*.trimmed.fastq.gz
+
+multiqc "$TRIM_QC_DIR" "$TRIM_DIR" -o "$TRIM_MULTIQC_DIR"
+
+###############################################################################
+# 4. HISAT2 alignment + samtools sort
+###############################################################################
+
+echo "Running HISAT2 alignment..."
+
+tail -n +2 "$SAMPLES" | while read -r SAMPLE TISSUE R1 R2; do
+
+    TRIM_R1="${TRIM_DIR}/${SAMPLE}_${TISSUE}_R1.trimmed.fastq.gz"
+    TRIM_R2="${TRIM_DIR}/${SAMPLE}_${TISSUE}_R2.trimmed.fastq.gz"
+
+    OUT_BAM="${ALIGN_DIR}/${SAMPLE}_${TISSUE}.sorted.bam"
+    LOG_FILE="${LOG_DIR}/${SAMPLE}_${TISSUE}.hisat2.log"
+
+    hisat2 \
+        -x "$GENOME_INDEX" \
+        -1 "$TRIM_R1" \
+        -2 "$TRIM_R2" \
+        -p "$THREADS" \
+        2> "$LOG_FILE" | \
+    samtools sort -@ 4 -o "$OUT_BAM"
+
+    samtools index "$OUT_BAM"
+
+done
+
+echo "========================================"
+echo "Pipeline completed successfully!"
+echo "Results saved in: $OUTDIR"
+echo "========================================"
