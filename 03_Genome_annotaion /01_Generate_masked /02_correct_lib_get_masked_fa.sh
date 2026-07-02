@@ -87,7 +87,7 @@ RepeatMasker \
     -pa "$THREADS" \
     -lib "$UPDATED_LIBRARY" \
     -dir "$OUTDIR" \
-    -a \
+    -e rmblast \
     -noisy \
     -xsmall \
     -gff \
