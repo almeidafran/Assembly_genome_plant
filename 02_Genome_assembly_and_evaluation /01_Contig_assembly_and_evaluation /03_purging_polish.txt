@@ -1,0 +1,13 @@
+# Not implemented here #
+
+##### Haplotig purging #####
+
+This is necessary or recommended when you want a haploid (collapsed) assembly—representing a single copy per genomic region—and the organism exhibits sufficient 
+heterozygosity to generate artificial duplications.
+
+However, it may not be necessary if you are creating a haplotype-resolved assembly (i.e., separating paternal and maternal haplotypes).
+
+##### Polishing #####
+
+With PacBio HiFi data, polishing is generally less critical than with assemblies generated using PacBio CLR or Oxford Nanopore, as HiFi reads already possess 
+high accuracy. Nevertheless, it can still be performed to correct residual errors, particularly indels or minor inconsistencies.
