@@ -26,5 +26,5 @@ fastp \
   --html 00_raw_qc/fastp_hic.html \
   --json 00_raw_qc/fastp_hic.json
 
-  #HiC-Pro can be used for QC.
+  #HiC-Pro can also be used for QC.
 
