@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
+#There are several other options that may affect the Hi-C integrated assembly. Increasing the values of --n-weight, 
+#--n-perturb and --f-perturb may improve phasing results but takes longer time. 
 
+#Specifying `--tell-me and --how-covid` can also improve the assembly.
 #############################################
 # Run hifiasm with PacBio HiFi + Hi-C reads
 #############################################
