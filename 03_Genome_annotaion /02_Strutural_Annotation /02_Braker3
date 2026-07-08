@@ -50,10 +50,10 @@ braker.pl \
     --workingdir="$WORKDIR" \
     --threads="$THREADS" \
     --gff3 \
-    --UTR=off \
+    --UTR=off \ #check for braker4
     --softmasking \
     --overwrite \
     --GENEMARK_PATH="$GENEMARK_PATH" \ #optional
     --PROTHINT_PATH="$PROTHINT_PATH" \ #optional
     --DIAMOND_PATH="$DIAMOND_PATH" \ #optional
-    --SAMTOOLS_PATH="$SAMTOOLS_PATH"
+    --SAMTOOLS_PATH="$SAMTOOLS_PATH" #optoonal
