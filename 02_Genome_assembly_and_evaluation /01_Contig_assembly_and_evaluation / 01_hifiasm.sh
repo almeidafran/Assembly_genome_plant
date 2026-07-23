@@ -32,8 +32,10 @@ hifiasm \
 #############################################
 
 # Primary contigs
-awk '/^S/{print ">"$2; print $3}' "${PREFIX}.bp.p_ctg.gfa" > "${PREFIX}.bp.p_ctg.fa"
+#using gfatools
+gfatools gfa2fa "${PREFIX}.bp.p_ctg.gfa" > "${PREFIX}.bp.p_ctg.fa"
 
+#or
 # Haplotype-resolved contigs
 awk '/^S/{print ">"$2; print $3}' "${PREFIX}.bp.hap1.p_ctg.gfa" > "${PREFIX}.bp.hap1.p_ctg.fa"
 awk '/^S/{print ">"$2; print $3}' "${PREFIX}.bp.hap2.p_ctg.gfa" > "${PREFIX}.bp.hap2.p_ctg.fa"
