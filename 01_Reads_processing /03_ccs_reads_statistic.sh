@@ -15,8 +15,8 @@ NanoPlot \
   --threads 24
 
 ####Check the quality and size of the reads; if necessary, apply a size and quality filter using filtlong.####
+#I don't filter PacBio reads based on QV or size; HiFi reads are already CCS reads with >Q20
 #https://github.com/rrwick/filtlong
 filtlong \
     --min_mean_q 20 \
-    --min_length 10000 \
     $filt_hifireads > hifi.filt.q20.10kb.fastq
